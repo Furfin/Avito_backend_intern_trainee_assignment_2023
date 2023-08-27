@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  db:
+    container_name: godb
+    image: postgres:latest
+    ports:
+    - "1338:5432"
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - PGUSER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql12/data
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres && pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    network_mode: host
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata: {}
