@@ -4,8 +4,10 @@ import (
 	"example/ravito/handlers/segment"
 	"example/ravito/handlers/user"
 	"example/ravito/initializers"
+	"example/ravito/models"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -16,9 +18,35 @@ func main() {
 	initializers.LoadEnvVars()
 	initializers.ConnectToDB()
 	initializers.SyncDB()
+
 	log := initializers.SetupLogger()
 	log.Info("Started ravito api")
 	log.Debug("Debug enabled")
+
+	ticker := time.NewTicker(15 * time.Minute)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				var rels []models.UserSegment
+				initializers.DB.Find(&rels)
+				for _, rel := range rels {
+					if rel.DaysExpire != 0 {
+						if (time.Since(rel.CreatedAt).Hours() / 24.0) < float64(rel.DaysExpire) {
+							log.Info("Delete: " + strconv.FormatInt(int64(rel.ID), 10))
+							initializers.DB.Delete(&rel)
+						}
+					}
+				}
+				log.Info("done")
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)

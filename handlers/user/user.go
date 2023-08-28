@@ -20,9 +20,10 @@ import (
 )
 
 type RequestUserSlugs struct {
-	AddTo      []string `json:"AddTo,omitempty"`
-	RemoveFrom []string `json:"RemoveFrom,omitempty"`
-	Userid     int64    `json:"userid" validate:"required"`
+	AddTo      []string       `json:"AddTo,omitempty"`
+	RemoveFrom []string       `json:"RemoveFrom,omitempty"`
+	Userid     int64          `json:"userid" validate:"required"`
+	Exparation map[string]int `json:"ttl_days,omitempty"`
 }
 
 type RequestUser struct {
@@ -137,8 +138,12 @@ func New(log *slog.Logger) http.HandlerFunc {
 
 				return
 			}
-
 			rel = models.UserSegment{UserID: int(user.ID), User: user, SegmentID: int(seg.ID), Segment: seg}
+			expire, ex := req.Exparation[seg.Slug]
+			if ex {
+				rel.DaysExpire = expire
+			}
+
 			result := initializers.DB.Create(&rel)
 			if result.Error != nil {
 				log.Error("invalid request")
