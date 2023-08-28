@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/render"
 
@@ -26,6 +27,12 @@ type RequestUserSlugs struct {
 
 type RequestUser struct {
 	Userid int64 `json:"userid" validate:"required"`
+}
+
+type RequestUserStory struct {
+	Userid int64 `json:"userid" validate:"required"`
+	Year   int64 `json:"year" validate:"required"`
+	Month  int64 `json:"month" validate:"required"`
 }
 
 type Response struct {
@@ -244,7 +251,7 @@ func NewUserHistory(log *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req RequestUser
+		var req RequestUserStory
 
 		err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
@@ -291,7 +298,10 @@ func NewUserHistory(log *slog.Logger) http.HandlerFunc {
 		for _, rel := range rels {
 			seg := models.Segment{}
 			initializers.DB.Where("id = ?", rel.SegmentID).Find(&seg)
-			records = append(records, []string{strconv.FormatInt(user.Userid, 10), seg.Slug, "added", rel.CreatedAt.String()})
+			if rel.CreatedAt.Year() >= int(req.Year) && rel.CreatedAt.Month() >= time.Month(req.Month) {
+				records = append(records, []string{strconv.FormatInt(user.Userid, 10), seg.Slug, "added", rel.CreatedAt.String()})
+			}
+
 		}
 		rels = []models.UserSegment{}
 
@@ -299,7 +309,9 @@ func NewUserHistory(log *slog.Logger) http.HandlerFunc {
 		for _, rel := range rels {
 			seg := models.Segment{}
 			initializers.DB.Where("id = ?", rel.SegmentID).Find(&seg)
-			records = append(records, []string{strconv.FormatInt(user.Userid, 10), seg.Slug, "deleted", rel.DeletedAt.Time.String()})
+			if rel.DeletedAt.Time.Year() >= int(req.Year) && rel.DeletedAt.Time.Month() >= time.Month(req.Month) {
+				records = append(records, []string{strconv.FormatInt(user.Userid, 10), seg.Slug, "deleted", rel.DeletedAt.Time.String()})
+			}
 		}
 		wr := csv.NewWriter(w)
 		w.Header().Set("Content-Type", "text/csv")
