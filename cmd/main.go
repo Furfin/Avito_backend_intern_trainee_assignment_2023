@@ -27,6 +27,8 @@ func main() {
 	router.Post("/segment", segment.NewCreate(log))
 	router.Delete("/segment", segment.NewDelete(log))
 	router.Post("/user", user.New(log))
+	router.Get("/user", user.NewUser(log))
+	router.Get("/user/csv", user.NewUserHistory(log))
 
 	log.Info("server started on " + os.Getenv("ADDRS") + ":" + os.Getenv("PORT"))
 
