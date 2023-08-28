@@ -33,7 +33,7 @@ func main() {
 				initializers.DB.Find(&rels)
 				for _, rel := range rels {
 					if rel.DaysExpire != 0 {
-						if (time.Since(rel.CreatedAt).Hours() / 24.0) < float64(rel.DaysExpire) {
+						if int(time.Now().Sub(rel.CreatedAt)/24.0) < rel.DaysExpire {
 							log.Info("Delete: " + strconv.FormatInt(int64(rel.ID), 10))
 							initializers.DB.Delete(&rel)
 						}
@@ -72,5 +72,6 @@ func main() {
 		log.Error("failed to start server")
 	}
 	log.Error("stopping server")
+	close(quit)
 
 }

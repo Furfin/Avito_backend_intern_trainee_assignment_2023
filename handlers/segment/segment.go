@@ -5,6 +5,7 @@ import (
 	"example/ravito/initializers"
 	"example/ravito/models"
 	"io"
+	"math/rand"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -16,7 +17,8 @@ import (
 )
 
 type Request struct {
-	Slug string `json:"slug" validate:"required"`
+	Slug  string `json:"slug" validate:"required"`
+	UPadd int    `json:"upadd,omitempty"`
 }
 
 type Response struct {
@@ -76,6 +78,27 @@ func NewCreate(log *slog.Logger) http.HandlerFunc {
 		}
 
 		log.Info("segment created", req.Slug)
+
+		if req.UPadd != 0 {
+			var users []models.User
+			initializers.DB.Find(&users)
+			n := len(users)
+			unum := (n * req.UPadd) / 100
+
+			arr := generateUniqueRandomNumbers(unum, n)
+
+			for _, val := range arr {
+				rel := models.UserSegment{UserID: int(users[val].ID), User: users[val], SegmentID: int(seg.ID), Segment: seg}
+				result := initializers.DB.Create(&rel)
+				if result.Error != nil {
+					log.Error("invalid request")
+					render.Status(r, 400)
+					render.JSON(w, r, Response{"Error", "db creation problem"})
+					return
+				}
+			}
+			log.Info("Users added")
+		}
 
 		render.JSON(w, r, Response{"Ok", "segment created"})
 	}
@@ -143,4 +166,17 @@ func NewDelete(log *slog.Logger) http.HandlerFunc {
 
 		render.JSON(w, r, Response{"Ok", "Segment deleted"})
 	}
+}
+
+func generateUniqueRandomNumbers(n, max int) []int {
+	set := make(map[int]bool)
+	var result []int
+	for len(set) < n {
+		value := rand.Intn(max)
+		if !set[value] {
+			set[value] = true
+			result = append(result, value)
+		}
+	}
+	return result
 }
