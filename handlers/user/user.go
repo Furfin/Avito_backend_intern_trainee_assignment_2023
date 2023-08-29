@@ -66,7 +66,7 @@ func UserSegmentsUpdate(w http.ResponseWriter, r *http.Request) {
 
 	userid, err := strconv.Atoi(chi.URLParam(r, "userid"))
 
-	if err != nil {
+	if err != nil || userid < 0 {
 		log.Error("Invalid id in req params")
 		render.Status(r, 400)
 		render.JSON(w, r, Response{"Error", "Invalid userid"})
@@ -214,7 +214,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	userid, err := strconv.Atoi(chi.URLParam(r, "userid"))
 
-	if err != nil {
+	if err != nil || userid < 0 {
 		log.Error("Invalid id in req params")
 		render.Status(r, 400)
 		render.JSON(w, r, Response{"Error", "Invalid userid"})
@@ -230,7 +230,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	if initializers.DB.First(&user, "userid = ?", userid).Error != nil {
 		log.Error("invalid request")
 		render.Status(r, 400)
-		render.JSON(w, r, UserResponse{"Error", "No such user is found" + strconv.Itoa(userid), nil})
+		render.JSON(w, r, UserResponse{"Error", "No such user is found: " + strconv.Itoa(userid), nil})
 		return
 
 	}
@@ -248,6 +248,8 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 // UserGetHistory - Returns user segments addition deletion history
+// @description year and month params set the left border of time interval
+// @description in which search will be conducted
 // @Tags ravito
 // @Accept  json
 // @Produce  json
@@ -266,7 +268,7 @@ func GetUserHistory(w http.ResponseWriter, r *http.Request) {
 	var req RequestUserStory
 	userid, err := strconv.Atoi(chi.URLParam(r, "userid"))
 
-	if err != nil {
+	if err != nil || userid < 0 {
 		log.Error("Invalid id in req params")
 		render.Status(r, 400)
 		render.JSON(w, r, Response{"Error", "Invalid userid"})
@@ -313,6 +315,12 @@ func GetUserHistory(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, Response{"Error", "No such user is found"})
 		return
 
+	}
+	if req.Year < 0 || req.Month < 0 || req.Month > 12 {
+		log.Error("invalid request")
+		render.Status(r, 400)
+		render.JSON(w, r, Response{"Error", "Invalid year/month data"})
+		return
 	}
 	records := [][]string{{"user", "segment_slug", "added/deleted", "datetime"}}
 	initializers.DB.Unscoped().Where("user_id = ?", user.ID).Find(&rels)

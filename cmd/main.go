@@ -68,9 +68,9 @@ func main() {
 	router.Post("/user/{userid}/add", user.UserSegmentsUpdate)
 	router.Get("/user/{userid}", user.GetUserInfo)
 	router.Post("/user/{userid}/csv", user.GetUserHistory)
-	router.Get("/swagger/*", httpSwaggerfix.Handler(
-		httpSwaggerfix.URL("doc.json"), //The url pointing to API definition
-	))
+	router.Get("/swagger/*", httpSwaggerfix.Handler(httpSwaggerfix.URL("doc.json")))
+
+	log.Info("Swagger docs are running on http://" + os.Getenv("ADDRS") + ":" + os.Getenv("PORT") + "/swagger/index.html")
 
 	log.Info("server started on " + os.Getenv("ADDRS") + ":" + os.Getenv("PORT"))
 

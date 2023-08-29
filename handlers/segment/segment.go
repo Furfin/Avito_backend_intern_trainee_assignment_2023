@@ -21,6 +21,10 @@ type Request struct {
 	UPadd int    `json:"upadd,omitempty"`
 }
 
+type RequestDelete struct {
+	Slug string `json:"slug" validate:"required"`
+}
+
 type Response struct {
 	Status string `json:"status"`
 	Error  string `json:"error"`
@@ -73,6 +77,14 @@ func CreateSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.UPadd < 0 || req.UPadd > 100 {
+		log.Error("invalid request")
+		render.Status(r, 400)
+		render.JSON(w, r, Response{"Error", "Invalid user segments auto addition percent"})
+
+		return
+	}
+
 	seg := models.Segment{Slug: req.Slug}
 	result := initializers.DB.Create(&seg)
 
@@ -115,7 +127,7 @@ func CreateSegment(w http.ResponseWriter, r *http.Request) {
 // @Tags ravito
 // @Accept  json
 // @Produce  json
-// @Param request body segment.Request true "query params"
+// @Param request body segment.RequestDelete true "query params"
 // @Success 200 {object} Response "api response"
 // @Router /segment [delete]
 func DeleteSegment(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +138,7 @@ func DeleteSegment(w http.ResponseWriter, r *http.Request) {
 		slog.String("request_id", middleware.GetReqID(r.Context())),
 	)
 
-	var req Request
+	var req RequestDelete
 
 	err := render.DecodeJSON(r.Body, &req)
 	if errors.Is(err, io.EOF) {
@@ -171,7 +183,7 @@ func DeleteSegment(w http.ResponseWriter, r *http.Request) {
 
 	initializers.DB.Where("segment_id = ?", seg.ID).Find(&rels)
 
-	initializers.DB.Delete(&rels)
+	initializers.DB.Unscoped().Where("segment_id = ?", seg.ID).Delete(&rels)
 
 	initializers.DB.Unscoped().Delete(&seg)
 

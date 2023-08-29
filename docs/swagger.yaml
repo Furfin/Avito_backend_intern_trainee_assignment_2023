@@ -17,6 +17,13 @@ definitions:
     required:
     - slug
     type: object
+  handlers_segment.RequestDelete:
+    properties:
+      slug:
+        type: string
+    required:
+    - slug
+    type: object
   handlers_segment.Response:
     properties:
       error:
@@ -98,7 +105,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers_segment.Request'
+          $ref: '#/definitions/handlers_segment.RequestDelete'
       produces:
       - application/json
       responses:
@@ -180,6 +187,9 @@ paths:
     post:
       consumes:
       - application/json
+      description: |-
+        year and month params set the left border of time interval
+        in which search will be conducted
       parameters:
       - description: user id
         in: path
