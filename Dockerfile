@@ -7,6 +7,7 @@ COPY ./ ./
 RUN go mod download
 
 RUN cd cmd && go build -o /source
+RUN cd ../
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.

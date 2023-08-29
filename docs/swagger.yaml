@@ -1,0 +1,204 @@
+basePath: /
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  handlers_segment.Request:
+    properties:
+      slug:
+        type: string
+      upadd:
+        type: integer
+    required:
+    - slug
+    type: object
+  handlers_segment.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers_user.RequestUserSlugs:
+    properties:
+      AddTo:
+        items:
+          type: string
+        type: array
+      RemoveFrom:
+        items:
+          type: string
+        type: array
+      ttl_days:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  handlers_user.RequestUserStory:
+    properties:
+      month:
+        type: integer
+      year:
+        type: integer
+    required:
+    - month
+    - year
+    type: object
+  handlers_user.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers_user.UserResponse:
+    properties:
+      error:
+        type: string
+      segments:
+        items:
+          $ref: '#/definitions/models.Segment'
+        type: array
+      status:
+        type: string
+    type: object
+  models.Segment:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      slug:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+host: localhost:8084
+info:
+  contact: {}
+  description: This is simple user segmentation service
+  title: ravito
+  version: "1.0"
+paths:
+  /segment:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes segments and deletes all relations to this segment
+      parameters:
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers_segment.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: api response
+          schema:
+            $ref: '#/definitions/handlers_segment.Response'
+      tags:
+      - ravito
+    post:
+      consumes:
+      - application/json
+      description: Creates new segment, upadd parameter sets number of percents of
+        user send to the new segment
+      parameters:
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers_segment.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: api response
+          schema:
+            $ref: '#/definitions/handlers_segment.Response'
+      tags:
+      - ravito
+  /user/{userid}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: userid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: api response
+          schema:
+            $ref: '#/definitions/handlers_user.UserResponse'
+      tags:
+      - ravito
+  /user/{userid}/add:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        If needed, creates user, then adds user to specified segments and deletes from specified
+        In optional dictionary you can specify expiration date for every added segments
+      parameters:
+      - description: user id
+        in: path
+        name: userid
+        required: true
+        type: integer
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers_user.RequestUserSlugs'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: api response
+          schema:
+            $ref: '#/definitions/handlers_user.Response'
+      tags:
+      - ravito
+  /user/{userid}/csv:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: userid
+        required: true
+        type: integer
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers_user.RequestUserStory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      tags:
+      - ravito
+swagger: "2.0"

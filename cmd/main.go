@@ -10,16 +10,26 @@ import (
 	"strconv"
 	"time"
 
+	_ "example/ravito/docs"
+
+	"example/ravito/httpSwaggerfix"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+//	@title			ravito
+//	@version		1.0
+//	@description	This is simple user segmentation service
+//	@BasePath /
+//	@host localhost:8084
 
 func main() {
 	initializers.LoadEnvVars()
 	initializers.ConnectToDB()
 	initializers.SyncDB()
-
-	log := initializers.SetupLogger()
+	initializers.SetupLogger()
+	log := initializers.Log
 	log.Info("Started ravito api")
 	log.Debug("Debug enabled")
 
@@ -48,15 +58,19 @@ func main() {
 	}()
 
 	router := chi.NewRouter()
+
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	router.Post("/segment", segment.NewCreate(log))
-	router.Delete("/segment", segment.NewDelete(log))
-	router.Post("/user", user.New(log))
-	router.Get("/user", user.NewUser(log))
-	router.Get("/user/csv", user.NewUserHistory(log))
+	router.Post("/segment", segment.CreateSegment)
+	router.Delete("/segment", segment.DeleteSegment)
+	router.Post("/user/{userid}/add", user.UserSegmentsUpdate)
+	router.Get("/user/{userid}", user.GetUserInfo)
+	router.Post("/user/{userid}/csv", user.GetUserHistory)
+	router.Get("/swagger/*", httpSwaggerfix.Handler(
+		httpSwaggerfix.URL("doc.json"), //The url pointing to API definition
+	))
 
 	log.Info("server started on " + os.Getenv("ADDRS") + ":" + os.Getenv("PORT"))
 
