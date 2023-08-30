@@ -67,7 +67,7 @@ func UserSegmentsUpdate(w http.ResponseWriter, r *http.Request) {
 	userid, err := strconv.Atoi(chi.URLParam(r, "userid"))
 
 	if err != nil || userid < 0 {
-		log.Error("Invalid id in req params")
+		log.Error("Invalid id in req params: " + err.Error())
 		render.Status(r, 400)
 		render.JSON(w, r, Response{"Error", "Invalid userid"})
 
@@ -228,11 +228,15 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	var rels []models.UserSegment
 
 	if initializers.DB.First(&user, "userid = ?", userid).Error != nil {
-		log.Error("invalid request")
-		render.Status(r, 400)
-		render.JSON(w, r, UserResponse{"Error", "No such user is found: " + strconv.Itoa(userid), nil})
-		return
+		user = models.User{Userid: int64(userid)}
+		result := initializers.DB.Create(&user)
+		if result.Error != nil {
+			log.Error("invalid request")
+			render.Status(r, 400)
+			render.JSON(w, r, Response{"Error", "Db creation problem"})
 
+			return
+		}
 	}
 
 	initializers.DB.Where("user_id = ?", user.ID).Find(&rels)
@@ -310,11 +314,15 @@ func GetUserHistory(w http.ResponseWriter, r *http.Request) {
 	var rels []models.UserSegment
 
 	if initializers.DB.First(&user, "userid = ?", userid).Error != nil {
-		log.Error("invalid request")
-		render.Status(r, 400)
-		render.JSON(w, r, Response{"Error", "No such user is found"})
-		return
+		user = models.User{Userid: int64(userid)}
+		result := initializers.DB.Create(&user)
+		if result.Error != nil {
+			log.Error("invalid request")
+			render.Status(r, 400)
+			render.JSON(w, r, Response{"Error", "Db creation problem"})
 
+			return
+		}
 	}
 	if req.Year < 0 || req.Month < 0 || req.Month > 12 {
 		log.Error("invalid request")

@@ -96,7 +96,7 @@ func CreateSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("segment created", req.Slug)
+	log.Info("segment created " + req.Slug)
 
 	if req.UPadd != 0 {
 		var users []models.User
@@ -187,7 +187,7 @@ func DeleteSegment(w http.ResponseWriter, r *http.Request) {
 
 	initializers.DB.Unscoped().Delete(&seg)
 
-	log.Info("segment deleted", req.Slug)
+	log.Info("segment deleted " + req.Slug)
 
 	render.JSON(w, r, Response{"Ok", "Segment deleted"})
 }
