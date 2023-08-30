@@ -158,7 +158,12 @@ func UserSegmentsUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 		rel = models.UserSegment{UserID: int(user.ID), User: user, SegmentID: int(seg.ID), Segment: seg}
 		expire, ex := req.Exparation[seg.Slug]
-		if ex {
+		if ex && expire < 0 {
+			log.Error("invalid request")
+			render.Status(r, 400)
+			render.JSON(w, r, Response{"Error", "Invalid data in ttl map"})
+			return
+		} else if ex {
 			rel.DaysExpire = expire
 		}
 
@@ -194,7 +199,7 @@ func UserSegmentsUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	render.JSON(w, r, Response{"Ok", "User segments changed"})
+	render.JSON(w, r, Response{"Ok", ""})
 }
 
 // UserGetInfo - Returns segments of user
@@ -248,7 +253,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	render.JSON(w, r, UserResponse{"Ok", "User info", segs})
+	render.JSON(w, r, UserResponse{"Ok", "", segs})
 }
 
 // UserGetHistory - Returns user segments addition deletion history

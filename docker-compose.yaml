@@ -5,7 +5,7 @@ services:
     container_name: godb
     image: postgres:latest
     ports:
-    - "1338:5432"
+    - "${DB_PORT}:5432"
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - PGUSER=${DB_USER}

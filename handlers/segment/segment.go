@@ -119,7 +119,7 @@ func CreateSegment(w http.ResponseWriter, r *http.Request) {
 		log.Info("Users added")
 	}
 
-	render.JSON(w, r, Response{"Ok", "segment created"})
+	render.JSON(w, r, Response{"Ok", ""})
 }
 
 // DeleteSegment - Delete segment using unique slug from body
@@ -189,7 +189,7 @@ func DeleteSegment(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("segment deleted " + req.Slug)
 
-	render.JSON(w, r, Response{"Ok", "Segment deleted"})
+	render.JSON(w, r, Response{"Ok", ""})
 }
 
 func generateUniqueRandomNumbers(n, max int) []int {
